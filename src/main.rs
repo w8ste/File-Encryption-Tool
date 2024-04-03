@@ -2,10 +2,15 @@
 mod cli;
 mod caeser;
 
+use std::io::{self, Write};
 use clap::builder::Str;
 use crate::cli::cli::parse_args;
 
 fn main() {
+    cli::cli::welcome()
+}
+
+fn arg_based() {
     let file: String = parse_args();
     println!("The contents of the file are:\n{}", file);
 
