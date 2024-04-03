@@ -1,6 +1,7 @@
 use clap::Parser;
 use std::fs::File;
 use std::io::{self, Read};
+use std::fs;
 use clap::builder::Str;
 
 #[derive(Parser, Debug)]
@@ -43,5 +44,11 @@ fn read_file(file_name : String) -> io::Result<String> {
     file.read_to_string(&mut contents)?;
 
     Ok(contents)
+}
+
+pub fn write_file(content : String, path : String) -> io::Result<()>{
+    fs::write(path, content)?;
+
+    Ok(())
 }
 
