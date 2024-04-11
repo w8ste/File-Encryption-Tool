@@ -1,3 +1,4 @@
+use std::backtrace::BacktraceStatus;
 use clap::Parser;
 use std::fs::File;
 use std::io::{self, Read, Write};
@@ -7,6 +8,8 @@ use clap::builder::Str;
 use crate::caeser::caeser::enc_caeser;
 use crate::caeser::caeser::dec_caeser;
 use crate::cli;
+use crate::block::ecb;
+use crate::block::ecb::encrypt_ecb;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -106,7 +109,8 @@ Please specify the path to your file:"#;
     const ENCMENU : &str = r#"
 Choose one of the following:
 1. CAESER
-2. GO BACK
+2. ECB (XOR)
+3. GO BACK
 
 Enter the number corresponding to your choice:"#;
 
@@ -131,7 +135,8 @@ Enter the number corresponding to your choice:"#;
         Ok(option) => {
             match option {
                 1 => caeser(file_path.trim().parse().unwrap(), true),
-                2 => return,
+                2 => ecb(file_path.trim().parse().unwrap(), true),
+                3 => return,
                 _ => println!("Invalid option, please try again!")
             }
         }
@@ -220,6 +225,45 @@ fn caeser(file_path : String, encrypt : bool) {
         eprintln!("An error has occurred, whilst writing to file: {}", e);
         std::process::exit(1);
     }
+}
+
+fn ecb(file_path : String, encrypt : bool) {
+    let end : String = r#"Please specify the path to the ouput file:"#.to_string();
+
+    println!("The file is called: {}!", file_path);
+    let contents: String = match read_file(file_path)  {
+        Ok(contents) => contents,
+        Err(e) => {
+            // print error message and exit from the program
+            eprintln!("An error has occurred whilst accessing the file: {}!", e);
+            std::process::exit(1);
+        }
+    };
+
+    println!("The contents of your file are: {}", contents);
+
+    // 3 is the default for caeser cypher
+    let mut text = String::new();
+    if encrypt {
+        // TODO: get key its own input file
+        text  = encrypt_ecb(&contents.clone().as_bytes(), &contents.as_bytes());
+        println!("The cipher is: {}", text);
+
+    }
+    else {
+        println!("The clear text is: ");
+    }
+
+
+    println!("{}", end);
+    print!("> ");
+    io::stdout().flush().unwrap();
+
+    let mut output_file_path = String::new();
+
+    io::stdin().read_line(&mut output_file_path).unwrap();
+
+
 }
 
 

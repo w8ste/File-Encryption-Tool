@@ -1,6 +1,7 @@
 
 mod cli;
 mod caeser;
+mod block;
 
 use std::io::{self, Write};
 use clap::builder::Str;
