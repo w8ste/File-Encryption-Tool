@@ -1,24 +1,4 @@
-fn enc_ecb(key : &[u8], plaintext : &[u8]) -> String {
-    let mut s = String::new();
-    for (pt_byte, key_byte) in plaintext.iter().zip(key.iter().cycle()) {
-        // XOR each byte of the plaintext with the corresponding byte of the key
-        let encrypted_byte = pt_byte ^ key_byte;
-        s.push((encrypted_byte.clone() + b'0') as char);
-    }
-
-    s
-}
-fn enc_block(clear_block: &String, key: &str) -> String {
-    let mut enc_block = String::new();
-    for (i, c) in clear_block.chars().enumerate() {
-        let key_char = key.chars().nth(i % key.len()).unwrap();
-        enc_block.push(char::from(c as u8 ^ key_char as u8));
-    }
-    enc_block
-}
-
 pub fn encrypt_ecb(m: &str, key: &str, block_length: usize) -> String {
-
     let mut enc = String::new();
     for i in (0..m.len()).step_by(block_length) {
         let mut block = &m[i..std::cmp::min(i + block_length, m.len())].to_string();
@@ -32,10 +12,23 @@ pub fn encrypt_ecb(m: &str, key: &str, block_length: usize) -> String {
     }
     enc
 }
+
 pub fn decrypt_ecb(c : &str, key: &str, block_length : usize) -> String {
     encrypt_ecb(c.clone(), key, block_length)
 }
 
+// Handles the actual encrypt operation per block
+fn enc_block(clear_block: &String, key: &str) -> String {
+    let mut enc_block = String::new();
+    for (i, c) in clear_block.chars().enumerate() {
+        let key_char = key.chars().nth(i % key.len()).unwrap();
+        enc_block.push(char::from(c as u8 ^ key_char as u8));
+    }
+    enc_block
+}
+
+
+// Padding/support functions
 fn pad(data: &mut Vec<u8>, block_size: usize) -> String{
     let padding_len = block_size - (data.len() % block_size);
     let padding_byte = padding_len as u8;

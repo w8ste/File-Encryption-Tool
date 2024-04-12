@@ -39,25 +39,6 @@ pub fn parse_args() -> String{
     contents
 }
 
-/*
-* file_name: path/filename
-* This method will attempt to read the contents of the specified file and returns
-* contents or propagate an error
- */
-fn read_file(file_name : String) -> io::Result<String> {
-    let mut file : File = File::open(file_name)?;
-
-    let mut contents : String = String::new();
-    file.read_to_string(&mut contents)?;
-
-    Ok(contents)
-}
-
-pub fn write_file(content : String, path : String) -> io::Result<()>{
-    fs::write(path, content)?;
-
-    Ok(())
-}
 
 
 pub fn welcome() {
@@ -145,22 +126,6 @@ Enter the number corresponding to your choice:"#;
         }
         Err(e) => println!("Invalid option, please try again")
     }
-
-}
-
-fn get_key_file() -> String {
-    const START : &str = r#"Your choice requires a specified file, which contains a key!
-Please specify the path to your file:"#;
-    println!("{}", START);
-    print!("> ");
-    io::stdout().flush().unwrap();
-
-    let mut file_path = String::new();
-
-    io::stdin().read_line(&mut file_path).unwrap();
-
-    file_path
-
 }
 
 fn decrypt() {
@@ -205,9 +170,24 @@ Enter the number corresponding to your choice:"#;
         }
         Err(e) => println!("Invalid option, please try again")
     }
-
-
 }
+
+//CLI section used for getting path to file, which contains key.
+fn get_key_file() -> String {
+    const START : &str = r#"Your choice requires a specified file, which contains a key!
+Please specify the path to your file:"#;
+    println!("{}", START);
+    print!("> ");
+    io::stdout().flush().unwrap();
+
+    let mut file_path = String::new();
+
+    io::stdin().read_line(&mut file_path).unwrap();
+
+    file_path
+}
+
+//CLI section for caeser cipher (testing purposes)
 fn caeser(file_path : String, encrypt : bool) {
 
     println!("The file is called: {}!", file_path);
@@ -228,24 +208,11 @@ fn caeser(file_path : String, encrypt : bool) {
         println!("The clear text is: \n{}", text);
     }
 
-    write_ouput_to_file(text);
-
+    write_output_to_file(text);
 }
 
 
-fn access_file(file_path : String) -> String{
-    let contents: String = match read_file(file_path)  {
-        Ok(contents) => contents.trim().parse().unwrap(),
-        Err(e) => {
-            // print error message and exit from the program
-            eprintln!("An error has occurred whilst accessing the file: {}!", e);
-            std::process::exit(1);
-        }
-    };
-
-    contents
-}
-
+//CLI section for ECB Cipher
 fn ecb(file_path : String, key_path : String,  encrypt : bool) {
 
     println!("The file is called: {}!", file_path);
@@ -268,10 +235,11 @@ fn ecb(file_path : String, key_path : String,  encrypt : bool) {
         println!("The clear text is: {}", text);
     }
 
-    write_ouput_to_file(text);
+    write_output_to_file(text);
 }
 
-fn write_ouput_to_file(text : String) {
+// used to write text to a specified file
+fn write_output_to_file(text : String) {
     let end : String = r#"Please specify the path to the ouput file:"#.to_string();
     println!("{}", end);
     print!("> ");
@@ -287,3 +255,36 @@ fn write_ouput_to_file(text : String) {
     }
 }
 
+// Used to read contents of a file
+fn access_file(file_path : String) -> String{
+    let contents: String = match read_file(file_path)  {
+        Ok(contents) => contents.trim().parse().unwrap(),
+        Err(e) => {
+            // print error message and exit from the program
+            eprintln!("An error has occurred whilst accessing the file: {}!", e);
+            std::process::exit(1);
+        }
+    };
+
+    contents
+}
+
+/*
+* file_name: path/filename
+* This method will attempt to read the contents of the specified file and returns
+* contents or propagate an error
+ */
+fn read_file(file_name : String) -> io::Result<String> {
+    let mut file : File = File::open(file_name)?;
+
+    let mut contents : String = String::new();
+    file.read_to_string(&mut contents)?;
+
+    Ok(contents)
+}
+
+pub fn write_file(content : String, path : String) -> io::Result<()>{
+    fs::write(path, content)?;
+
+    Ok(())
+}
