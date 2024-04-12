@@ -9,7 +9,7 @@ use crate::caeser::caeser::enc_caeser;
 use crate::caeser::caeser::dec_caeser;
 use crate::cli;
 use crate::block::ecb;
-use crate::block::ecb::encrypt_ecb;
+use crate::block::ecb::{decrypt_ecb, encrypt_ecb};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -169,7 +169,8 @@ Please specify the path to your file:"#;
     const DECMENU : &str = r#"
 Choose one of the following:
 1. CAESER
-2. GO BACK
+2. ECB (XOR)
+3. GO BACK
 
 Enter the number corresponding to your choice:"#;
 
@@ -194,7 +195,11 @@ Enter the number corresponding to your choice:"#;
         Ok(option) => {
             match option {
                 1 => caeser(file_path.trim().parse().unwrap(), false),
-                2 => return,
+                2 => {
+                    let key_path = get_key_file();
+                    ecb(file_path.trim().parse().unwrap(), key_path, false)
+                },
+                3 => return,
                 _ => println!("Invalid option, please try again!")
             }
         }
@@ -204,7 +209,6 @@ Enter the number corresponding to your choice:"#;
 
 }
 fn caeser(file_path : String, encrypt : bool) {
-    let end : String = r#"Please specify the path to the ouput file:"#.to_string();
 
     println!("The file is called: {}!", file_path);
 
@@ -224,7 +228,51 @@ fn caeser(file_path : String, encrypt : bool) {
         println!("The clear text is: \n{}", text);
     }
 
+    write_ouput_to_file(text);
 
+}
+
+
+fn access_file(file_path : String) -> String{
+    let contents: String = match read_file(file_path)  {
+        Ok(contents) => contents.trim().parse().unwrap(),
+        Err(e) => {
+            // print error message and exit from the program
+            eprintln!("An error has occurred whilst accessing the file: {}!", e);
+            std::process::exit(1);
+        }
+    };
+
+    contents
+}
+
+fn ecb(file_path : String, key_path : String,  encrypt : bool) {
+
+    println!("The file is called: {}!", file_path);
+    let contents: String = access_file(file_path.trim().parse().unwrap());
+
+    println!("The contents of your file are: {}", contents);
+
+    let key : String = access_file(key_path.trim().parse().unwrap());
+
+    let mut text = String::new();
+    if encrypt {
+        text  = encrypt_ecb(&contents.as_str(), &key.as_str(), key.len());
+        println!("The cipher is: {}", text);
+
+    }
+    else {
+        println!("Key length: {}", &key.len());
+        println!("Content length: {}", &contents.len());
+        text = decrypt_ecb(&contents.clone(), &key, key.clone().len());
+        println!("The clear text is: {}", text);
+    }
+
+    write_ouput_to_file(text);
+}
+
+fn write_ouput_to_file(text : String) {
+    let end : String = r#"Please specify the path to the ouput file:"#.to_string();
     println!("{}", end);
     print!("> ");
     io::stdout().flush().unwrap();
@@ -238,52 +286,4 @@ fn caeser(file_path : String, encrypt : bool) {
         std::process::exit(1);
     }
 }
-
-
-fn access_file(file_path : String) -> String{
-    let contents: String = match read_file(file_path)  {
-        Ok(contents) => contents,
-        Err(e) => {
-            // print error message and exit from the program
-            eprintln!("An error has occurred whilst accessing the file: {}!", e);
-            std::process::exit(1);
-        }
-    };
-
-    contents
-}
-
-fn ecb(file_path : String, key_path : String,  encrypt : bool) {
-    let end : String = r#"Please specify the path to the ouput file:"#.to_string();
-
-    println!("The file is called: {}!", file_path);
-    let contents: String = access_file(file_path.trim().parse().unwrap());
-
-    println!("The contents of your file are: {}", contents);
-
-    let key : String = access_file(key_path.trim().parse().unwrap());
-
-    // 3 is the default for caeser cypher
-    let mut text = String::new();
-    if encrypt {
-        text  = encrypt_ecb(&contents.clone().as_bytes(), &key.as_bytes());
-        println!("The cipher is: {}", text);
-
-    }
-    else {
-        println!("The clear text is: ");
-    }
-
-
-    println!("{}", end);
-    print!("> ");
-    io::stdout().flush().unwrap();
-
-    let mut output_file_path = String::new();
-
-    io::stdin().read_line(&mut output_file_path).unwrap();
-
-}
-
-
 
