@@ -10,6 +10,7 @@ use crate::caeser::caeser::dec_caeser;
 use crate::cli;
 use crate::block::ecb;
 use crate::block::ecb::{decrypt_ecb, encrypt_ecb};
+use rand::Rng;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -287,4 +288,16 @@ pub fn write_file(content : String, path : String) -> io::Result<()>{
     fs::write(path, content)?;
 
     Ok(())
+}
+
+fn generate_iv(length : usize) -> String{
+    let charset: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let mut rng = rand::thread_rng();
+    let iv: String = (0..length)
+        .map(|_| {
+            let index = rng.gen_range(0..charset.len());
+            charset[index] as char
+        })
+        .collect();
+    iv
 }
