@@ -127,21 +127,39 @@ Enter the number corresponding to your choice:"#;
     print!("> ");
     io::stdout().flush().unwrap();
 
-    let mut enc = String::new();
+    let mut enc_choice = String::new();
 
-    io::stdin().read_line(&mut enc).unwrap();
+    io::stdin().read_line(&mut enc_choice).unwrap();
 
-    match enc.trim().parse::<u32>() {
+    match enc_choice.trim().parse::<u32>() {
         Ok(option) => {
             match option {
                 1 => caeser(file_path.trim().parse().unwrap(), true),
-                2 => ecb(file_path.trim().parse().unwrap(), true),
+                2 => {
+                    let key_path : String = get_key_file();
+                    ecb(file_path.trim().parse().unwrap(), key_path, true)
+                },
                 3 => return,
                 _ => println!("Invalid option, please try again!")
             }
         }
         Err(e) => println!("Invalid option, please try again")
     }
+
+}
+
+fn get_key_file() -> String {
+    const START : &str = r#"Your choice requires a specified file, which contains a key!
+Please specify the path to your file:"#;
+    println!("{}", START);
+    print!("> ");
+    io::stdout().flush().unwrap();
+
+    let mut file_path = String::new();
+
+    io::stdin().read_line(&mut file_path).unwrap();
+
+    file_path
 
 }
 
@@ -189,14 +207,8 @@ fn caeser(file_path : String, encrypt : bool) {
     let end : String = r#"Please specify the path to the ouput file:"#.to_string();
 
     println!("The file is called: {}!", file_path);
-    let contents: String = match read_file(file_path)  {
-        Ok(contents) => contents,
-        Err(e) => {
-            // print error message and exit from the program
-            eprintln!("An error has occurred whilst accessing the file: {}!", e);
-            std::process::exit(1);
-        }
-    };
+
+    let contents : String = access_file(file_path);
 
     println!("The contents of your file are: {}", contents);
 
@@ -227,10 +239,8 @@ fn caeser(file_path : String, encrypt : bool) {
     }
 }
 
-fn ecb(file_path : String, encrypt : bool) {
-    let end : String = r#"Please specify the path to the ouput file:"#.to_string();
 
-    println!("The file is called: {}!", file_path);
+fn access_file(file_path : String) -> String{
     let contents: String = match read_file(file_path)  {
         Ok(contents) => contents,
         Err(e) => {
@@ -240,13 +250,23 @@ fn ecb(file_path : String, encrypt : bool) {
         }
     };
 
+    contents
+}
+
+fn ecb(file_path : String, key_path : String,  encrypt : bool) {
+    let end : String = r#"Please specify the path to the ouput file:"#.to_string();
+
+    println!("The file is called: {}!", file_path);
+    let contents: String = access_file(file_path.trim().parse().unwrap());
+
     println!("The contents of your file are: {}", contents);
+
+    let key : String = access_file(key_path.trim().parse().unwrap());
 
     // 3 is the default for caeser cypher
     let mut text = String::new();
     if encrypt {
-        // TODO: get key its own input file
-        text  = encrypt_ecb(&contents.clone().as_bytes(), &contents.as_bytes());
+        text  = encrypt_ecb(&contents.clone().as_bytes(), &key.as_bytes());
         println!("The cipher is: {}", text);
 
     }
@@ -262,7 +282,6 @@ fn ecb(file_path : String, encrypt : bool) {
     let mut output_file_path = String::new();
 
     io::stdin().read_line(&mut output_file_path).unwrap();
-
 
 }
 
